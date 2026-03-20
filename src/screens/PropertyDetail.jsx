@@ -211,7 +211,9 @@ function Row({ label, value, highlight }) {
 }
 
 function formatPrice(price) {
-  if (price >= 10000000) return (price / 10000000).toFixed(1) + ' Cr'
-  if (price >= 100000) return (price / 100000).toFixed(1) + ' L'
-  return price.toLocaleString('en-IN')
+  const num = Number(price)
+  if (isNaN(num)) return price
+  if (num >= 10000000) return (num / 10000000).toFixed(1) + ' Cr'
+  if (num >= 100000) return (num / 100000).toFixed(1) + ' L'
+  return num.toLocaleString('en-IN')
 }
