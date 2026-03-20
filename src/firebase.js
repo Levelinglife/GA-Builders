@@ -3,15 +3,13 @@ import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 import { getAuth } from 'firebase/auth'
 
-// Values come from your .env file (copy .env.example → .env and fill in)
-// Also add these same values in Vercel → Project Settings → Environment Variables
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  apiKey: "AIzaSyA53R8HCNdp5GtNeHgym4Jgt2G8e4T-ZHE",
+  authDomain: "gen-lang-client-0683605153.firebaseapp.com",
+  projectId: "gen-lang-client-0683605153",
+  storageBucket: "gen-lang-client-0683605153.firebasestorage.app",
+  messagingSenderId: "1018400864072",
+  appId: "1:1018400864072:web:9bf81d4a3044702036657d",
 }
 
 const app = initializeApp(firebaseConfig)
