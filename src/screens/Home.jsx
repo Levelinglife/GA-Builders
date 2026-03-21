@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { collection, getDocs, orderBy, query } from 'firebase/firestore'
+import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
 import { db } from '../firebase'
 import PropertyCard from '../components/PropertyCard'
 
@@ -17,24 +17,81 @@ export default function Home() {
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState('all')
 
-  useEffect(() => {
-    fetchProperties()
-  }, [])
+  const [aiFilters, setAiFilters] = useState(null)
+  const [isAiLoading, setIsAiLoading] = useState(false)
 
-  async function fetchProperties() {
-    try {
-      const q = query(collection(db, 'properties'), orderBy('createdAt', 'desc'))
-      const snap = await getDocs(q)
+  useEffect(() => {
+    const q = query(collection(db, 'properties'), orderBy('createdAt', 'desc'))
+    const unsub = onSnapshot(q, (snap) => {
       const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
       setProperties(data)
-    } catch (err) {
-      console.error('Error fetching properties:', err)
-    } finally {
       setLoading(false)
+    }, (err) => {
+      console.error('Error fetching properties:', err)
+      setLoading(false)
+    })
+    return () => unsub()
+  }, [])
+
+  async function handleAISearch() {
+    if (!search.trim()) return
+    let key = localStorage.getItem('gemini_api_key')
+    if (!key) {
+      key = window.prompt('Please enter your Gemini API Key to use AI Search:')
+      if (!key) return
+      localStorage.setItem('gemini_api_key', key)
+    }
+
+    setIsAiLoading(true)
+    try {
+      const prompt = `Extract property search criteria from this query: "${search}". 
+        Return ONLY valid JSON with these optional keys: 
+        "minSize" (number in Gaj), "maxSize" (number in Gaj), "budget" (number), "block" (string), "type" (string, one of 'Residential', 'Commercial', 'Mixed Use', 'Plot / Land'), "status" (string, one of 'for_sale', 'rented', 'occupied', 'construction').
+        No markdown formatting. E.g. {"budget": 6000000, "block": "B"}`
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      })
+
+      const data = await response.json()
+      if (data.error) throw new Error(data.error.message)
+
+      let resultText = data.candidates[0].content.parts[0].text
+      if (resultText.startsWith('```json')) {
+        resultText = resultText.replace(/```json/g, '').replace(/```/g, '').trim()
+      } else if (resultText.startsWith('```')) {
+        resultText = resultText.replace(/```/g, '').trim()
+      }
+      
+      const criteria = JSON.parse(resultText.trim())
+      setAiFilters(criteria)
+      
+    } catch (err) {
+      console.error(err)
+      if (err.message.includes('API_KEY_INVALID')) {
+        localStorage.removeItem('gemini_api_key')
+        alert('Invalid API key. Please try again.')
+      } else {
+        alert('AI Parsing failed. Ensure your API key is correct.')
+      }
+    } finally {
+      setIsAiLoading(false)
     }
   }
 
   const filtered = properties.filter(p => {
+    if (aiFilters) {
+      if (aiFilters.minSize && (!p.plotSize || Number(p.plotSize) < aiFilters.minSize)) return false
+      if (aiFilters.maxSize && (!p.plotSize || Number(p.plotSize) > aiFilters.maxSize)) return false
+      if (aiFilters.budget && (!p.price || Number(p.price) > aiFilters.budget)) return false
+      if (aiFilters.block && (!p.block || !p.block.toLowerCase().includes(aiFilters.block.toLowerCase()))) return false
+      if (aiFilters.type && p.type !== aiFilters.type) return false
+      if (aiFilters.status && p.status !== aiFilters.status) return false
+      return true
+    }
+
     const matchesFilter = filter === 'all' || p.status === filter
     const matchesSearch =
       !search ||
@@ -51,45 +108,76 @@ export default function Home() {
         <h1 className="font-display font-bold text-white text-2xl mb-4">Properties</h1>
 
         {/* Search */}
-        <div className="flex items-center bg-white/10 rounded-xl px-4 py-3 gap-3">
+        <div className="flex items-center bg-white/10 rounded-xl px-4 py-3 gap-2">
           <svg className="w-5 h-5 text-white/60 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
           </svg>
           <input
             type="text"
-            placeholder="Search by house no. or owner name..."
+            placeholder="Search by ID, block, or Ask AI..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="bg-transparent text-white placeholder-white/50 text-sm flex-1 outline-none"
+            onKeyDown={e => e.key === 'Enter' && handleAISearch()}
+            className="bg-transparent text-white placeholder-white/50 text-sm flex-1 outline-none min-w-0"
           />
           {search && (
-            <button onClick={() => setSearch('')}>
-              <svg className="w-4 h-4 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button onClick={() => { setSearch(''); setAiFilters(null) }}>
+              <svg className="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
           )}
+          <button 
+             onClick={handleAISearch} 
+             disabled={!search || isAiLoading}
+             className="bg-accent text-primary rounded-lg px-3 py-1.5 text-xs font-display font-extrabold shadow-sm whitespace-nowrap active:scale-95 transition-all disabled:opacity-50 ml-1"
+           >
+             {isAiLoading ? 'Wait...' : 'AI ✨'}
+          </button>
         </div>
+
+        {aiFilters && (
+          <div className="mt-4 bg-accent/20 border border-accent/40 rounded-xl px-4 py-3 flex justify-between items-start backdrop-blur-sm">
+             <div>
+               <p className="text-white text-xs font-semibold uppercase mb-1 flex items-center gap-1.5">
+                 <svg className="w-3.5 h-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                 </svg>
+                 AI Filter Applied
+               </p>
+               <p className="text-white/80 text-sm font-medium">
+                 {Object.entries(aiFilters).map(([k,v]) => `${k}: ${v}`).join(', ') || 'General Match'}
+               </p>
+             </div>
+             <button onClick={() => { setAiFilters(null); setSearch('') }} className="text-white/60 hover:text-white mt-0.5">
+               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+               </svg>
+             </button>
+          </div>
+        )}
       </div>
 
       {/* Filter Pills */}
-      <div className="flex gap-2 px-5 py-4 overflow-x-auto scroll-hidden">
-        {FILTERS.map(f => (
-          <button
-            key={f.value}
-            onClick={() => setFilter(f.value)}
-            className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors
-              ${filter === f.value
-                ? 'bg-primary text-white'
-                : 'bg-surface-raised text-text-secondary'}`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      {!aiFilters && (
+        <div className="flex gap-2 px-5 py-4 overflow-x-auto scroll-hidden">
+          {FILTERS.map(f => (
+            <button
+              key={f.value}
+              onClick={() => setFilter(f.value)}
+              className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors
+                ${filter === f.value
+                  ? 'bg-primary text-white'
+                  : 'bg-surface-raised text-text-secondary'}`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* List */}
-      <div className="px-5 flex flex-col gap-4">
+      <div className={`px-5 flex flex-col gap-4 ${aiFilters ? 'pt-5' : ''}`}>
         {loading ? (
           // Skeleton loader
           [1, 2, 3].map(i => (
@@ -106,8 +194,12 @@ export default function Home() {
             <svg className="w-16 h-16 text-text-muted mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M3 9.75L12 3l9 6.75V21a.75.75 0 01-.75.75H3.75A.75.75 0 013 21V9.75z" />
             </svg>
-            <p className="text-text-muted text-base font-medium">No properties yet</p>
-            <p className="text-text-muted text-sm mt-1">Tap + to add your first one</p>
+            <p className="text-text-muted text-base font-medium">No properties found</p>
+            {aiFilters ? (
+              <p className="text-text-muted text-sm mt-1">Try a different AI prompt</p>
+            ) : (
+              <p className="text-text-muted text-sm mt-1">Tap + to add your first one</p>
+            )}
           </div>
         ) : (
           filtered.map(p => <PropertyCard key={p.id} property={p} />)

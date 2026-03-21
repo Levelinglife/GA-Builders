@@ -147,12 +147,12 @@ export default function Match() {
 
         <div className="flex gap-3">
           <div className="flex-1">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">Min Size (sq yd)</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">Min Size (Gaj)</label>
             <input name="minSize" value={req.minSize} onChange={handleChange} placeholder="80" type="number"
               className="w-full bg-surface-raised rounded-xl px-4 py-3 text-text-primary outline-none focus:ring-2 focus:ring-primary/20" />
           </div>
           <div className="flex-1">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">Max Size (sq yd)</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">Max Size (Gaj)</label>
             <input name="maxSize" value={req.maxSize} onChange={handleChange} placeholder="150" type="number"
               className="w-full bg-surface-raised rounded-xl px-4 py-3 text-text-primary outline-none focus:ring-2 focus:ring-primary/20" />
           </div>

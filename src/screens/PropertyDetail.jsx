@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { doc, getDoc, deleteDoc } from 'firebase/firestore'
+import { doc, onSnapshot, deleteDoc } from 'firebase/firestore'
 import { db } from '../firebase'
 import StatusBadge from '../components/StatusBadge'
 
@@ -13,23 +13,21 @@ export default function PropertyDetail() {
   const [deleting, setDeleting] = useState(false)
 
   useEffect(() => {
-    loadProperty()
+    const unsub = onSnapshot(doc(db, 'properties', id), (snap) => {
+      if (snap.exists()) setProperty({ id: snap.id, ...snap.data() })
+      setLoading(false)
+    }, (err) => {
+      console.error(err)
+      setLoading(false)
+    })
+    return () => unsub()
   }, [id])
 
-  async function loadProperty() {
-    try {
-      const snap = await getDoc(doc(db, 'properties', id))
-      if (snap.exists()) setProperty({ id: snap.id, ...snap.data() })
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleDelete() {
+  function handleDelete() {
     if (!window.confirm('Delete this property? This cannot be undone.')) return
-    setDeleting(true)
-    await deleteDoc(doc(db, 'properties', id))
+    // Navigate instantly and delete in background
     navigate('/')
+    deleteDoc(doc(db, 'properties', id)).catch(console.error)
   }
 
   if (loading) return (
@@ -126,7 +124,7 @@ export default function PropertyDetail() {
       {/* Info Grid */}
       <div className="mx-5 grid grid-cols-2 gap-3 mb-5">
         {property.plotSize && (
-          <InfoTile label="Plot Size" value={`${property.plotSize} sq yd`} />
+          <InfoTile label="Plot Size" value={`${property.plotSize} Gaj`} />
         )}
         {property.floors && (
           <InfoTile label="Floors" value={property.floors} />
@@ -152,29 +150,6 @@ export default function PropertyDetail() {
         <div className="mx-5 bg-surface rounded-2xl p-4 mb-4">
           <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">Notes</p>
           <p className="text-text-primary text-sm leading-relaxed">{property.notes}</p>
-        </div>
-      )}
-
-      {/* GPS / Map Link */}
-      {property.lat && property.lng && (
-        <div className="mx-5 mb-4">
-          <a
-            href={`https://maps.google.com/?q=${property.lat},${property.lng}`}
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center justify-between bg-surface rounded-2xl px-4 py-4"
-          >
-            <div className="flex items-center gap-3">
-              <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              <span className="text-text-primary text-sm font-medium">View on Maps</span>
-            </div>
-            <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </a>
         </div>
       )}
 

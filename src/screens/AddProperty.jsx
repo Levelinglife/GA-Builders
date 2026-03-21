@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { collection, addDoc, doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, doc, onSnapshot, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { db, storage } from '../firebase'
 
@@ -30,8 +30,6 @@ const EMPTY_FORM = {
   price: '',
   contact: '',
   notes: '',
-  lat: '',
-  lng: '',
 }
 
 export default function AddProperty() {
@@ -46,31 +44,30 @@ export default function AddProperty() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (isEdit) loadProperty()
-  }, [id])
-
-  async function loadProperty() {
-    const snap = await getDoc(doc(db, 'properties', id))
-    if (snap.exists()) {
-      const data = snap.data()
-      setForm({
-        houseNo: data.houseNo || '',
-        ownerName: data.ownerName || '',
-        block: data.block || '',
-        plotSize: data.plotSize || '',
-        floors: data.floors || '',
-        type: data.type || 'Residential',
-        status: data.status || 'occupied',
-        price: data.price || '',
-        contact: data.contact || '',
-        notes: data.notes || '',
-        lat: data.lat || '',
-        lng: data.lng || '',
-      })
-      setExistingPhotos(data.photos || [])
+    let loaded = false
+    if (isEdit) {
+      const unsub = onSnapshot(doc(db, 'properties', id), (snap) => {
+        if (snap.exists() && !loaded) {
+          loaded = true
+          const data = snap.data()
+          setForm({
+            houseNo: data.houseNo || '',
+            ownerName: data.ownerName || '',
+            block: data.block || '',
+            plotSize: data.plotSize || '',
+            floors: data.floors || '',
+            type: data.type || 'Residential',
+            status: data.status || 'occupied',
+            price: data.price || '',
+            contact: data.contact || '',
+            notes: data.notes || '',
+          })
+          setExistingPhotos(data.photos || [])
+        }
+      }, console.error)
+      return () => unsub()
     }
-  }
-
+  }, [id])
   function handleChange(e) {
     setForm(prev => ({ ...prev, [e.target.name]: e.target.value }))
   }
@@ -96,34 +93,44 @@ export default function AddProperty() {
       setError('House number is required')
       return
     }
-    setSaving(true)
     setError('')
 
     try {
       if (isEdit) {
-        const photoUrls = await uploadPhotos(id)
-        await updateDoc(doc(db, 'properties', id), {
-          ...form,
-          photos: photoUrls,
-          updatedAt: serverTimestamp(),
-        })
+        // For edits: navigate away immediately, save in background
         navigate(`/property/${id}`)
+        updateDoc(doc(db, 'properties', id), {
+          ...form,
+          updatedAt: serverTimestamp(),
+        }).catch(console.error)
+        // Upload photos silently in background
+        if (photos.length > 0) {
+          uploadPhotos(id).then(photoUrls => {
+            updateDoc(doc(db, 'properties', id), { photos: photoUrls })
+          }).catch(console.error)
+        }
       } else {
-        const docRef = await addDoc(collection(db, 'properties'), {
+        // Generate a new doc ref with ID immediately — no network wait
+        const newDocRef = doc(collection(db, 'properties'))
+        // Navigate instantly using the pre-generated ID
+        navigate(`/property/${newDocRef.id}`)
+        // Save to Firestore entirely in background
+        setDoc(newDocRef, {
           ...form,
           photos: [],
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-        })
-        const photoUrls = await uploadPhotos(docRef.id)
-        await updateDoc(docRef, { photos: photoUrls })
-        navigate(`/property/${docRef.id}`)
+        }).catch(console.error)
+        // Upload photos in background
+        if (photos.length > 0) {
+          uploadPhotos(newDocRef.id).then(photoUrls => {
+            updateDoc(newDocRef, { photos: photoUrls })
+          }).catch(console.error)
+        }
       }
     } catch (err) {
       console.error(err)
-      setError('Something went wrong. Please try again.')
-    } finally {
-      setSaving(false)
+      setError(err.message || 'Something went wrong. Please try again.')
     }
   }
 
@@ -181,7 +188,7 @@ export default function AddProperty() {
         {/* Plot Size + Floors */}
         <div className="flex gap-3">
           <div className="flex-1">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">Plot Size (sq yd)</label>
+            <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">Plot Size (Gaj)</label>
             <input name="plotSize" value={form.plotSize} onChange={handleChange} placeholder="100" type="number"
               className="w-full bg-surface-raised rounded-xl px-4 py-3 text-text-primary outline-none focus:ring-2 focus:ring-primary/20" />
           </div>
@@ -259,20 +266,6 @@ export default function AddProperty() {
             className="w-full bg-surface-raised rounded-xl px-4 py-3 text-text-primary outline-none focus:ring-2 focus:ring-primary/20 resize-none" />
         </div>
 
-        {/* GPS (optional) */}
-        <div className="flex gap-3">
-          <div className="flex-1">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">Latitude (optional)</label>
-            <input name="lat" value={form.lat} onChange={handleChange} placeholder="28.6xxx" type="number" step="any"
-              className="w-full bg-surface-raised rounded-xl px-4 py-3 text-text-primary outline-none focus:ring-2 focus:ring-primary/20" />
-          </div>
-          <div className="flex-1">
-            <label className="block text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">Longitude (optional)</label>
-            <input name="lng" value={form.lng} onChange={handleChange} placeholder="77.0xxx" type="number" step="any"
-              className="w-full bg-surface-raised rounded-xl px-4 py-3 text-text-primary outline-none focus:ring-2 focus:ring-primary/20" />
-          </div>
-        </div>
-
         {/* Error */}
         {error && (
           <p className="text-red-500 text-sm bg-red-50 rounded-xl px-4 py-3">{error}</p>
@@ -281,10 +274,9 @@ export default function AddProperty() {
         {/* Save Button */}
         <button
           onClick={handleSave}
-          disabled={saving}
-          className="w-full bg-primary text-white font-display font-bold text-base py-4 rounded-2xl active:scale-[0.98] transition-transform disabled:opacity-60 mt-2"
+          className="w-full bg-primary text-white font-display font-bold text-base py-4 rounded-2xl active:scale-[0.98] transition-transform mt-2"
         >
-          {saving ? 'Saving...' : isEdit ? 'Save Changes' : 'Save Property'}
+          {isEdit ? 'Save Changes' : 'Save Property'}
         </button>
 
       </div>

@@ -12,7 +12,6 @@ import BottomNav from './components/BottomNav'
 
 export default function App() {
   const [user, setUser] = useState(undefined)
-
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, u => setUser(u))
     return () => unsub()
