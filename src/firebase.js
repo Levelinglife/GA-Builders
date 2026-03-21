@@ -14,13 +14,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 
-// Use persistent offline cache so data loads instantly from device storage
-// on every subsequent open, then syncs updates in background.
 // Force long-polling to fix WebSocket blocks on Indian/local networks.
 export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({ tabManager: persistentMultipleTabManager() }),
-  experimentalForceLongPolling: true,
-  useFetchStreams: false,
+  experimentalForceLongPolling: true
 })
 export const storage = getStorage(app)
 export const auth = getAuth(app)

@@ -93,44 +93,34 @@ export default function AddProperty() {
       setError('House number is required')
       return
     }
+    setSaving(true)
     setError('')
 
     try {
       if (isEdit) {
-        // For edits: navigate away immediately, save in background
-        navigate(`/property/${id}`)
-        updateDoc(doc(db, 'properties', id), {
+        const photoUrls = await uploadPhotos(id)
+        await updateDoc(doc(db, 'properties', id), {
           ...form,
+          photos: photoUrls,
           updatedAt: serverTimestamp(),
-        }).catch(console.error)
-        // Upload photos silently in background
-        if (photos.length > 0) {
-          uploadPhotos(id).then(photoUrls => {
-            updateDoc(doc(db, 'properties', id), { photos: photoUrls })
-          }).catch(console.error)
-        }
+        })
+        navigate(`/property/${id}`)
       } else {
-        // Generate a new doc ref with ID immediately — no network wait
-        const newDocRef = doc(collection(db, 'properties'))
-        // Navigate instantly using the pre-generated ID
-        navigate(`/property/${newDocRef.id}`)
-        // Save to Firestore entirely in background
-        setDoc(newDocRef, {
+        const docRef = await addDoc(collection(db, 'properties'), {
           ...form,
           photos: [],
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp(),
-        }).catch(console.error)
-        // Upload photos in background
-        if (photos.length > 0) {
-          uploadPhotos(newDocRef.id).then(photoUrls => {
-            updateDoc(newDocRef, { photos: photoUrls })
-          }).catch(console.error)
-        }
+        })
+        const photoUrls = await uploadPhotos(docRef.id)
+        await updateDoc(docRef, { photos: photoUrls })
+        navigate(`/property/${docRef.id}`)
       }
     } catch (err) {
       console.error(err)
       setError(err.message || 'Something went wrong. Please try again.')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -274,9 +264,10 @@ export default function AddProperty() {
         {/* Save Button */}
         <button
           onClick={handleSave}
-          className="w-full bg-primary text-white font-display font-bold text-base py-4 rounded-2xl active:scale-[0.98] transition-transform mt-2"
+          disabled={saving}
+          className="w-full bg-primary text-white font-display font-bold text-base py-4 rounded-2xl active:scale-[0.98] transition-transform disabled:opacity-60 mt-2"
         >
-          {isEdit ? 'Save Changes' : 'Save Property'}
+          {saving ? 'Saving...' : isEdit ? 'Save Changes' : 'Save Property'}
         </button>
 
       </div>
