@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore'
+import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 
@@ -14,10 +14,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 
-// Force long-polling to fix WebSocket blocks on Indian/local networks.
-export const db = initializeFirestore(app, {
-  experimentalForceLongPolling: true
-})
+export const db = getFirestore(app)
 export const storage = getStorage(app)
 export const auth = getAuth(app)
 export const googleProvider = new GoogleAuthProvider()

@@ -22,15 +22,21 @@ export default function Home() {
 
   useEffect(() => {
     const q = query(collection(db, 'properties'), orderBy('createdAt', 'desc'))
+
+    // Safety cap: never show spinner for more than 2.5 seconds
+    const timeout = setTimeout(() => setLoading(false), 2500)
+
     const unsub = onSnapshot(q, (snap) => {
+      clearTimeout(timeout)
       const data = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }))
       setProperties(data)
       setLoading(false)
     }, (err) => {
+      clearTimeout(timeout)
       console.error('Error fetching properties:', err)
       setLoading(false)
     })
-    return () => unsub()
+    return () => { unsub(); clearTimeout(timeout) }
   }, [])
 
   async function handleAISearch() {

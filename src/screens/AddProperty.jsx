@@ -77,11 +77,33 @@ export default function AddProperty() {
     setPhotos(prev => [...prev, ...files].slice(0, 8))
   }
 
+  // Compress image to max 800px wide and ~200KB before uploading
+  function compressImage(file) {
+    return new Promise((resolve) => {
+      const img = new Image()
+      const url = URL.createObjectURL(file)
+      img.onload = () => {
+        URL.revokeObjectURL(url)
+        const MAX = 800
+        let { width, height } = img
+        if (width > MAX) { height = Math.round(height * MAX / width); width = MAX }
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height)
+        canvas.toBlob(blob => resolve(blob || file), 'image/jpeg', 0.75)
+      }
+      img.onerror = () => resolve(file)
+      img.src = url
+    })
+  }
+
   async function uploadPhotos(propertyId) {
     const urls = [...existingPhotos]
     for (const file of photos) {
+      const compressed = await compressImage(file)
       const storageRef = ref(storage, `properties/${propertyId}/${Date.now()}_${file.name}`)
-      await uploadBytes(storageRef, file)
+      await uploadBytes(storageRef, compressed)
       const url = await getDownloadURL(storageRef)
       urls.push(url)
     }
