@@ -21,6 +21,17 @@ const EMPTY_FORM = {
 // Max file size: 10MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024
 
+const InputField = ({ label, ...props }) => (
+  <label className="flex flex-col gap-1.5 w-full">
+    <span className="text-[15px] font-bold text-text-muted px-1 uppercase tracking-wider">{label}</span>
+    <input
+      {...props}
+      className={`w-full bg-surface-raised rounded-xl px-4 py-3.5 text-text-primary outline-none text-[17px] border-2 border-surface/50 focus:border-accent shadow-sm transition-all focus:shadow-accent/20 placeholder-text-muted/30 ${props.className || ''}`}
+    />
+  </label>
+)
+
+
 export default function AddProperty() {
   const navigate = useNavigate()
   const { id } = useParams()
@@ -31,7 +42,6 @@ export default function AddProperty() {
   const [existingPhotos, setExistingPhotos] = useState([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const [showMore, setShowMore] = useState(false)
 
   useEffect(() => {
     let loaded = false
@@ -48,8 +58,6 @@ export default function AddProperty() {
             contact: data.contact || '', notes: data.notes || '',
           })
           setExistingPhotos(data.photos || [])
-          // Auto-show "more" section if extra fields have data
-          if (data.floors || data.price || data.contact || data.notes) setShowMore(true)
         }
       }, console.error)
       return () => unsub()
@@ -188,94 +196,101 @@ export default function AddProperty() {
   }
 
   return (
-    <div className="pb-28">
+    <div className="pb-28 max-w-lg mx-auto">
       {/* Header */}
-      <div className="bg-primary px-5 pt-12 pb-5 flex items-center gap-4 border-b border-accent/10">
-        <button onClick={() => navigate(-1)} className="text-text-muted active:text-accent transition-colors">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+      <div className="bg-primary px-5 pt-12 pb-5 flex items-center gap-4 border-b border-accent/10 sticky top-0 z-10 shadow-sm">
+        <button onClick={() => navigate(-1)} className="p-2 -ml-2 text-text-muted active:text-accent transition-colors">
+          <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 className="font-display font-bold text-accent text-xl">
-          {isEdit ? 'Edit Property' : 'Quick Add'}
+        <h1 className="font-display font-bold text-accent text-2xl">
+          {isEdit ? 'Edit Property' : 'Add Property'}
         </h1>
       </div>
 
-      <div className="px-5 py-5 flex flex-col gap-4">
+      <div className="px-5 py-6 flex flex-col gap-8">
 
-        {/* ─── ESSENTIAL FIELDS (always visible) ─── */}
-        <div className="bg-surface-raised rounded-2xl p-4 border border-accent/5">
-          {/* House No — BIG and prominent */}
-          <input
-            name="houseNo" value={form.houseNo} onChange={handleChange}
-            placeholder="House / Plot No. *"
-            autoFocus
-            className="w-full bg-transparent text-text-primary font-display font-bold text-2xl outline-none placeholder-text-muted/40 mb-4"
-          />
+        {/* ─── BASIC INFO ─── */}
+        <section className="flex flex-col gap-4">
+          <h2 className="text-xl font-bold border-b border-accent/20 pb-2 text-text-primary">Basic Info</h2>
+          <InputField label="House / Plot No. *" name="houseNo" value={form.houseNo} onChange={handleChange} placeholder="e.g. 154" autoFocus />
+          <InputField label="Owner Name" name="ownerName" value={form.ownerName} onChange={handleChange} placeholder="First & Last Name" />
+          <InputField label="Block / Sector" name="block" value={form.block} onChange={handleChange} placeholder="e.g. Block C" />
+        </section>
+
+        {/* ─── STATUS ─── */}
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl font-bold border-b border-accent/20 pb-2 text-text-primary">Status</h2>
           <div className="grid grid-cols-2 gap-3">
-            <input name="ownerName" value={form.ownerName} onChange={handleChange} placeholder="Owner Name"
-              className="bg-surface rounded-xl px-3 py-2.5 text-text-primary outline-none text-sm border border-transparent focus:border-accent/30" />
-            <input name="block" value={form.block} onChange={handleChange} placeholder="Block / Sector"
-              className="bg-surface rounded-xl px-3 py-2.5 text-text-primary outline-none text-sm border border-transparent focus:border-accent/30" />
-          </div>
-        </div>
-
-        {/* ─── STATUS — tap to select (visual, fast) ─── */}
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2 px-1">Status</p>
-          <div className="flex gap-2 overflow-x-auto scroll-hidden pb-1">
             {STATUS_OPTIONS.map(s => (
-              <button key={s.value} onClick={() => setForm(prev => ({ ...prev, status: s.value }))}
-                className={`flex-shrink-0 px-3.5 py-2 rounded-xl text-sm font-medium transition-all border
-                  ${form.status === s.value
-                    ? s.color + ' scale-[1.02]'
-                    : 'bg-surface-raised text-text-muted border-transparent'}`}>
-                {s.label}
-              </button>
+              <label key={s.value} className={`relative flex items-center gap-3 px-4 py-4 rounded-xl text-base font-semibold transition-all border-2 cursor-pointer
+                ${form.status === s.value
+                  ? s.color.replace('border-', 'border-[2px] border-') + ' shadow-md'
+                  : 'bg-surface-raised text-text-muted border-surface/50 hover:bg-surface'}`}>
+                <input type="radio" value={s.value} checked={form.status === s.value}
+                  onChange={() => setForm(prev => ({ ...prev, status: s.value }))} className="hidden" />
+                <div className={`w-5 h-5 flex-shrink-0 rounded-full border-2 flex items-center justify-center ${form.status === s.value ? 'border-current' : 'border-text-muted/50'}`}>
+                  {form.status === s.value && <div className="w-2.5 h-2.5 rounded-full bg-current" />}
+                </div>
+                <span className="leading-tight">{s.label}</span>
+              </label>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* ─── TYPE — tap to select ─── */}
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2 px-1">Type</p>
-          <div className="flex gap-2 overflow-x-auto scroll-hidden pb-1">
+        {/* ─── PROPERTY TYPE ─── */}
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl font-bold border-b border-accent/20 pb-2 text-text-primary">Property Type</h2>
+          <div className="grid grid-cols-2 gap-3">
             {TYPE_OPTIONS.map(t => (
-              <button key={t} onClick={() => setForm(prev => ({ ...prev, type: t }))}
-                className={`flex-shrink-0 px-3.5 py-2 rounded-xl text-sm font-medium transition-all border
-                  ${form.type === t
-                    ? 'bg-accent/10 text-accent border-accent/20'
-                    : 'bg-surface-raised text-text-muted border-transparent'}`}>
-                {t}
-              </button>
+              <label key={t} className={`relative flex items-center gap-3 px-4 py-4 rounded-xl text-base font-semibold transition-all border-2 cursor-pointer
+                ${form.type === t
+                  ? 'bg-accent/10 border-accent text-accent shadow-md'
+                  : 'bg-surface-raised text-text-muted border-surface/50 hover:bg-surface'}`}>
+                <input type="radio" value={t} checked={form.type === t}
+                  onChange={() => setForm(prev => ({ ...prev, type: t }))} className="hidden" />
+                <div className={`w-5 h-5 flex-shrink-0 rounded-full border-2 flex items-center justify-center ${form.type === t ? 'border-accent' : 'border-text-muted/50'}`}>
+                  {form.type === t && <div className="w-2.5 h-2.5 rounded-full bg-accent" />}
+                </div>
+                <span className="leading-tight">{t}</span>
+              </label>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* ─── PLOT SIZE — single quick field ─── */}
-        <div className="flex gap-3">
-          <div className="flex-1 bg-surface-raised rounded-xl px-3 py-2.5 flex items-center gap-2 border border-transparent focus-within:border-accent/30">
-            <span className="text-text-muted text-sm">📐</span>
-            <input name="plotSize" value={form.plotSize} onChange={handleChange} placeholder="Plot Size (Gaj)" type="number"
-              className="bg-transparent text-text-primary outline-none text-sm flex-1 min-w-0" />
-          </div>
-          <div className="flex-1 bg-surface-raised rounded-xl px-3 py-2.5 flex items-center gap-2 border border-transparent focus-within:border-accent/30">
-            <span className="text-text-muted text-sm">₹</span>
-            <input name="price" value={form.price} onChange={handleChange} placeholder="Price" type="number"
-              className="bg-transparent text-text-primary outline-none text-sm flex-1 min-w-0" />
-          </div>
-        </div>
+        {/* ─── DIMENSIONS & PRICING ─── */}
+        <section className="flex flex-col gap-4">
+          <h2 className="text-xl font-bold border-b border-accent/20 pb-2 text-text-primary">Dimensions & Pricing</h2>
+          <InputField label="Plot Size (Gaj)" name="plotSize" value={form.plotSize} onChange={handleChange} placeholder="e.g. 250" type="number" />
+          <InputField label="Floors" name="floors" value={form.floors} onChange={handleChange} placeholder="e.g. G+2" />
+          <InputField label="Price (₹)" name="price" value={form.price} onChange={handleChange} placeholder="e.g. 15000000" type="number" />
+        </section>
 
-        {/* ─── PHOTOS — camera-first design ─── */}
-        <div>
-          <div className="flex gap-2 overflow-x-auto scroll-hidden pb-1">
+        {/* ─── ADDITIONAL DETAILS ─── */}
+        <section className="flex flex-col gap-4">
+          <h2 className="text-xl font-bold border-b border-accent/20 pb-2 text-text-primary">Additional Details</h2>
+          <InputField label="Contact Phone" name="contact" value={form.contact} onChange={handleChange} placeholder="Phone Number" type="tel" />
+          <label className="flex flex-col gap-1.5 w-full">
+            <span className="text-[15px] font-bold text-text-muted px-1 uppercase tracking-wider">Notes</span>
+            <textarea name="notes" value={form.notes} onChange={handleChange}
+              placeholder="Corner plot, east facing, etc."
+              rows={4}
+              className="w-full bg-surface-raised rounded-xl px-4 py-3.5 text-text-primary outline-none text-[17px] border-2 border-surface/50 focus:border-accent transition-colors resize-none placeholder-text-muted/30" />
+          </label>
+        </section>
+
+        {/* ─── PHOTOS ─── */}
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl font-bold border-b border-accent/20 pb-2 text-text-primary">Photos (Optional)</h2>
+          <div className="flex flex-wrap gap-4 pt-2">
             {/* Existing photos */}
             {existingPhotos.map((url, i) => (
               <div key={'e' + i} className="relative flex-shrink-0">
-                <img src={url} alt="" className="w-20 h-20 object-cover rounded-xl" />
+                <img src={url} alt="" className="w-24 h-24 object-cover rounded-xl shadow-sm border border-surface/50" />
                 <button onClick={() => removeExistingPhoto(i)}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  className="absolute -top-3 -right-3 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform border-[3px] border-primary">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -284,10 +299,10 @@ export default function AddProperty() {
             {/* New photos */}
             {photos.map((file, i) => (
               <div key={'n' + i} className="relative flex-shrink-0">
-                <img src={URL.createObjectURL(file)} alt="" className="w-20 h-20 object-cover rounded-xl opacity-80" />
+                <img src={URL.createObjectURL(file)} alt="" className="w-24 h-24 object-cover rounded-xl shadow-sm border border-surface/50 opacity-80" />
                 <button onClick={() => removeNewPhoto(i)}
-                  className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  className="absolute -top-3 -right-3 w-8 h-8 bg-red-500 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-transform border-[3px] border-primary">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
@@ -295,61 +310,31 @@ export default function AddProperty() {
             ))}
 
             {/* Add photo button */}
-            <label className="flex-shrink-0 w-20 h-20 bg-surface-raised rounded-xl border-2 border-dashed border-accent/20 flex flex-col items-center justify-center cursor-pointer active:bg-surface gap-1">
-              <svg className="w-6 h-6 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <label className="flex-shrink-0 w-24 h-24 bg-surface-raised rounded-xl border-2 border-dashed border-accent/40 flex flex-col items-center justify-center cursor-pointer active:bg-surface hover:bg-surface transition-colors gap-1.5 shadow-inner">
+              <svg className="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
               </svg>
-              <span className="text-text-muted text-[10px]">Photo</span>
+              <span className="text-text-muted text-[11px] font-bold uppercase tracking-wide">Add Photo</span>
               <input type="file" accept="image/*" multiple onChange={handlePhotos} className="hidden" />
             </label>
           </div>
-        </div>
-
-        {/* ─── MORE DETAILS (expandable) ─── */}
-        <button onClick={() => setShowMore(v => !v)}
-          className="flex items-center justify-center gap-2 text-text-muted text-sm py-2">
-          <span>{showMore ? 'Less details' : 'More details'}</span>
-          <svg className={`w-4 h-4 transition-transform ${showMore ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-
-        {showMore && (
-          <div className="flex flex-col gap-3 animate-fade-in">
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-surface-raised rounded-xl px-3 py-2.5 flex items-center gap-2 border border-transparent focus-within:border-accent/30">
-                <span className="text-text-muted text-sm">🏢</span>
-                <input name="floors" value={form.floors} onChange={handleChange} placeholder="Floors (G+2)"
-                  className="bg-transparent text-text-primary outline-none text-sm flex-1 min-w-0" />
-              </div>
-              <div className="bg-surface-raised rounded-xl px-3 py-2.5 flex items-center gap-2 border border-transparent focus-within:border-accent/30">
-                <span className="text-text-muted text-sm">📞</span>
-                <input name="contact" value={form.contact} onChange={handleChange} placeholder="Contact" type="tel"
-                  className="bg-transparent text-text-primary outline-none text-sm flex-1 min-w-0" />
-              </div>
-            </div>
-            <textarea name="notes" value={form.notes} onChange={handleChange}
-              placeholder="Notes — corner plot, east facing, disputed, renovated..."
-              rows={2}
-              className="w-full bg-surface-raised rounded-xl px-3 py-2.5 text-text-primary outline-none border border-transparent focus:border-accent/30 text-sm resize-none" />
-          </div>
-        )}
+        </section>
 
         {/* Error */}
         {error && (
-          <div className="flex items-start gap-2 text-red-400 text-sm bg-red-500/10 rounded-xl px-4 py-3 border border-red-500/20">
-            <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          <div className="flex items-start gap-3 text-red-500 text-base bg-red-500/10 rounded-xl px-4 py-4 border-2 border-red-500/20 shadow-sm mt-2">
+            <svg className="w-6 h-6 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>{error}</span>
+            <span className="font-semibold">{error}</span>
           </div>
         )}
 
         {/* Save Button */}
         <button onClick={handleSave} disabled={saving}
-          className="w-full bg-accent text-primary font-display font-bold text-base py-4 rounded-2xl active:scale-[0.98] transition-all disabled:opacity-60 shadow-lg shadow-accent/20">
-          {saving ? 'Saving...' : isEdit ? 'Save Changes' : '+ Save Property'}
+          className="w-full bg-accent text-primary font-display font-bold text-xl tracking-wide py-5 rounded-2xl active:scale-[0.98] transition-all disabled:opacity-60 shadow-xl shadow-accent/20 mt-4 border-2 border-accent/20 hover:bg-accent/90 focus:ring-4 focus:ring-accent/30 outline-none">
+          {saving ? 'Saving...' : isEdit ? 'Save Changes' : 'Save Property'}
         </button>
       </div>
     </div>
