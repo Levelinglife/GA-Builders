@@ -5,6 +5,8 @@ import { db } from '../firebase'
 
 const STATUS_OPTIONS = [
   { value: 'for_sale', label: '🏷️ For Sale', color: 'bg-green-500/10 text-green-400 border-green-500/20' },
+  { value: 'need_tenant', label: '📢 Need Tenant', color: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
+  { value: 'need_rent_house', label: '🔍 Need Rent House', color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' },
   { value: 'rented', label: '🔑 Rented', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
   { value: 'occupied', label: '🏠 Occupied', color: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' },
   { value: 'construction', label: '🏗️ Construction', color: 'bg-orange-500/10 text-orange-400 border-orange-500/20' },
@@ -12,6 +14,17 @@ const STATUS_OPTIONS = [
 ]
 
 const TYPE_OPTIONS = ['Residential', 'Commercial', 'Mixed Use', 'Plot / Land']
+
+const FLOOR_OPTIONS = [
+  'Full House (Jad se)',
+  'Basement',
+  'Ground Floor',
+  '1st Floor',
+  '2nd Floor',
+  '3rd Floor',
+  '4th Floor',
+  'Other'
+]
 
 const EMPTY_FORM = {
   houseNo: '', ownerName: '', block: '', plotSize: '', floors: '',
@@ -71,8 +84,12 @@ export default function AddProperty() {
   function handlePhotos(e) {
     const files = Array.from(e.target.files)
     const validFiles = files.filter(file => {
+      if (file.type.startsWith('video/')) {
+        setError(`Skipped "${file.name}": The current free hosting (ImgBB) only supports images.`)
+        return false
+      }
       if (!file.type.startsWith('image/')) {
-        setError(`"${file.name}" is not an image and was skipped.`)
+        setError(`"${file.name}" is not supported and was skipped.`)
         return false
       }
       if (file.size > MAX_FILE_SIZE) {
@@ -216,7 +233,7 @@ export default function AddProperty() {
           <h2 className="text-xl font-bold border-b border-accent/20 pb-2 text-text-primary">Basic Info</h2>
           <InputField label="House / Plot No. *" name="houseNo" value={form.houseNo} onChange={handleChange} placeholder="e.g. 154" autoFocus />
           <InputField label="Owner Name" name="ownerName" value={form.ownerName} onChange={handleChange} placeholder="First & Last Name" />
-          <InputField label="Block / Sector" name="block" value={form.block} onChange={handleChange} placeholder="e.g. Block C" />
+          <InputField label="Address" name="block" value={form.block} onChange={handleChange} placeholder="e.g. Block C, Sector 4" />
         </section>
 
         {/* ─── STATUS ─── */}
@@ -263,7 +280,23 @@ export default function AddProperty() {
         <section className="flex flex-col gap-4">
           <h2 className="text-xl font-bold border-b border-accent/20 pb-2 text-text-primary">Dimensions & Pricing</h2>
           <InputField label="Plot Size (Gaj)" name="plotSize" value={form.plotSize} onChange={handleChange} placeholder="e.g. 250" type="number" />
-          <InputField label="Floors" name="floors" value={form.floors} onChange={handleChange} placeholder="e.g. G+2" />
+          
+          <label className="flex flex-col gap-1.5 w-full">
+            <span className="text-[15px] font-bold text-text-muted px-1 uppercase tracking-wider">Floor</span>
+            <div className="relative">
+              <select name="floors" value={form.floors} onChange={handleChange}
+                className="w-full bg-surface-raised rounded-xl px-4 py-3.5 text-text-primary outline-none text-[17px] border-2 border-surface/50 focus:border-accent shadow-sm transition-all focus:shadow-accent/20 appearance-none">
+                <option value="" disabled>Select Floor</option>
+                {FLOOR_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+              </select>
+              <div className="absolute top-0 right-4 h-full flex items-center pointer-events-none text-text-muted">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </label>
+
           <InputField label="Price (₹)" name="price" value={form.price} onChange={handleChange} placeholder="e.g. 15000000" type="number" />
         </section>
 
@@ -309,14 +342,14 @@ export default function AddProperty() {
               </div>
             ))}
 
-            {/* Add photo button */}
+            {/* Add photo/video button */}
             <label className="flex-shrink-0 w-24 h-24 bg-surface-raised rounded-xl border-2 border-dashed border-accent/40 flex flex-col items-center justify-center cursor-pointer active:bg-surface hover:bg-surface transition-colors gap-1.5 shadow-inner">
               <svg className="w-8 h-8 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14v4a2 2 0 01-2 2H5a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v4z" />
               </svg>
-              <span className="text-text-muted text-[11px] font-bold uppercase tracking-wide">Add Photo</span>
-              <input type="file" accept="image/*" multiple onChange={handlePhotos} className="hidden" />
+              <span className="text-text-muted text-[11px] font-bold uppercase tracking-wide text-center leading-tight">Add Photo<br/>/ Video</span>
+              <input type="file" accept="image/*,video/*" multiple onChange={handlePhotos} className="hidden" />
             </label>
           </div>
         </section>
