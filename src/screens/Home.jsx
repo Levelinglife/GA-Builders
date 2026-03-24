@@ -6,6 +6,8 @@ import PropertyCard from '../components/PropertyCard'
 const FILTERS = [
   { label: 'All', value: 'all' },
   { label: 'For Sale', value: 'for_sale' },
+  { label: 'To Let', value: 'need_tenant' },
+  { label: 'Need Rent', value: 'need_rent_house' },
   { label: 'Rented', value: 'rented' },
   { label: 'Occupied', value: 'occupied' },
   { label: 'Construction', value: 'construction' },

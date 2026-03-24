@@ -1,5 +1,7 @@
 const STATUS_STYLES = {
   for_sale: { label: 'For Sale', bg: 'bg-status-sale-bg', text: 'text-status-sale' },
+  need_tenant: { label: 'To Let', bg: 'bg-purple-500/20', text: 'text-purple-400' },
+  need_rent_house: { label: 'Need Rent', bg: 'bg-cyan-500/20', text: 'text-cyan-400' },
   rented: { label: 'Rented', bg: 'bg-status-rent-bg', text: 'text-status-rent' },
   occupied: { label: 'Occupied', bg: 'bg-status-occupied-bg', text: 'text-status-occupied' },
   construction: { label: 'Under Construction', bg: 'bg-status-construction-bg', text: 'text-status-construction' },
