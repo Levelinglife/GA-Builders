@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { collection, doc, onSnapshot, setDoc, updateDoc, serverTimestamp } from 'firebase/firestore'
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'
-import { db, storage } from '../firebase'
+import { db } from '../firebase'
 
 const STATUS_OPTIONS = [
   { value: 'for_sale', label: '🏷️ For Sale', color: 'bg-green-500/10 text-green-400 border-green-500/20' },
@@ -106,13 +105,29 @@ export default function AddProperty() {
   async function uploadPhotos(propertyId, docRef) {
     const urls = [...existingPhotos]
     const failedNames = []
+
+    // IMPGBB FREE API KEY
+    const IMGBB_API_KEY = 'efc9f4ca043d87a164bd03d15962024e'
+    
     for (let i = 0; i < photos.length; i++) {
       try {
         const compressed = await compressImage(photos[i])
-        const storageRef = ref(storage, `properties/${propertyId}/${Date.now()}_${photos[i].name}`)
-        await uploadBytes(storageRef, compressed)
-        const url = await getDownloadURL(storageRef)
-        urls.push(url)
+        
+        const formData = new FormData()
+        formData.append('image', compressed)
+        
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+          method: 'POST',
+          body: formData
+        })
+        
+        const data = await res.json()
+        if (data.success) {
+          urls.push(data.data.url)
+        } else {
+          throw new Error('ImgBB API error')
+        }
+
       } catch (err) {
         console.error(`Failed to upload ${photos[i].name}:`, err)
         failedNames.push(photos[i].name)

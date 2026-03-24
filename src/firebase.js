@@ -4,21 +4,21 @@ import { getStorage } from 'firebase/storage'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 
 const firebaseConfig = {
-  apiKey: "AIzaSyA53R8HCNdp5GtNeHgym4Jgt2G8e4T-ZHE",
-  authDomain: "gen-lang-client-0683605153.firebaseapp.com",
-  projectId: "gen-lang-client-0683605153",
-  storageBucket: "gen-lang-client-0683605153.firebasestorage.app",
-  messagingSenderId: "1018400864072",
-  appId: "1:1018400864072:web:9bf81d4a3044702036657d",
+  apiKey: "AIzaSyDOq57TGgnQUlyXLhuMJiZ9aw2ZhQayqeY",
+  authDomain: "ga-builders.firebaseapp.com",
+  projectId: "ga-builders",
+  storageBucket: "ga-builders.firebasestorage.app",
+  messagingSenderId: "276691535944",
+  appId: "1:276691535944:web:bbce3975e9fe769de2707d",
 }
 
 const app = initializeApp(firebaseConfig)
 
-// Enable multi-tab offline persistence for faster reads
+// Connect exactly to the named 'ai-studio' database you linked
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache(),
-})
-export const storage = getStorage(app)
+}, "ai-studio-e7df4aa7-b061-4f2c-99eb-940880e9d903")
+
 export const auth = getAuth(app)
 export const googleProvider = new GoogleAuthProvider()
 export default app
