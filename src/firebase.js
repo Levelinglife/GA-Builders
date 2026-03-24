@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app'
-import { getFirestore } from 'firebase/firestore'
+import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 import { getAuth, GoogleAuthProvider } from 'firebase/auth'
 
@@ -14,7 +14,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig)
 
-export const db = getFirestore(app)
+// Enable multi-tab offline persistence for faster reads
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache(),
+})
 export const storage = getStorage(app)
 export const auth = getAuth(app)
 export const googleProvider = new GoogleAuthProvider()

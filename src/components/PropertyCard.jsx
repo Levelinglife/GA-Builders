@@ -7,7 +7,7 @@ export default function PropertyCard({ property }) {
 
   return (
     <div
-      className="bg-surface rounded-2xl overflow-hidden shadow-sm active:scale-[0.98] transition-transform cursor-pointer"
+      className="bg-surface rounded-2xl overflow-hidden shadow-sm active:scale-[0.98] transition-transform cursor-pointer border border-accent/5"
       onClick={() => navigate(`/property/${property.id}`)}
     >
       {/* Photo */}
@@ -17,6 +17,7 @@ export default function PropertyCard({ property }) {
             src={photo}
             alt={`House ${property.houseNo}`}
             className="w-full h-full object-cover"
+            loading="lazy"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-surface-raised">
@@ -43,7 +44,7 @@ export default function PropertyCard({ property }) {
           )}
         </div>
         {property.price && (
-          <p className="font-display font-semibold text-primary text-base">
+          <p className="font-display font-semibold text-accent text-base">
             ₹{formatPrice(property.price)}
           </p>
         )}

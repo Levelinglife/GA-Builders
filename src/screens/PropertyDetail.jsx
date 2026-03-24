@@ -25,21 +25,20 @@ export default function PropertyDetail() {
 
   function handleDelete() {
     if (!window.confirm('Delete this property? This cannot be undone.')) return
-    // Navigate instantly and delete in background
     navigate('/')
     deleteDoc(doc(db, 'properties', id)).catch(console.error)
   }
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-screen">
-      <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      <div className="w-8 h-8 border-2 border-accent/30 border-t-accent rounded-full animate-spin" />
     </div>
   )
 
   if (!property) return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-4">
       <p className="text-text-muted">Property not found</p>
-      <button onClick={() => navigate('/')} className="text-primary font-medium">Go back</button>
+      <button onClick={() => navigate('/')} className="text-accent font-medium">Go back</button>
     </div>
   )
 
@@ -62,7 +61,7 @@ export default function PropertyDetail() {
         {/* Back button */}
         <button
           onClick={() => navigate(-1)}
-          className="absolute top-12 left-4 w-10 h-10 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white"
+          className="absolute top-12 left-4 w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -72,7 +71,7 @@ export default function PropertyDetail() {
         {/* Edit button */}
         <button
           onClick={() => navigate(`/edit/${id}`)}
-          className="absolute top-12 right-4 w-10 h-10 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center text-white"
+          className="absolute top-12 right-4 w-10 h-10 bg-black/50 backdrop-blur-sm rounded-full flex items-center justify-center text-white"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -84,7 +83,7 @@ export default function PropertyDetail() {
           <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-1.5">
             {photos.map((_, i) => (
               <button key={i} onClick={() => setPhotoIndex(i)}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${i === photoIndex ? 'bg-white w-4' : 'bg-white/50'}`} />
+                className={`w-1.5 h-1.5 rounded-full transition-all ${i === photoIndex ? 'bg-accent w-4' : 'bg-white/50'}`} />
             ))}
           </div>
         )}
@@ -92,11 +91,11 @@ export default function PropertyDetail() {
 
       {/* Scrollable photo strip */}
       {photos.length > 1 && (
-        <div className="flex gap-2 px-5 py-3 overflow-x-auto scroll-hidden">
+        <div className="flex gap-2 px-5 py-3 overflow-x-auto scroll-hidden bg-surface">
           {photos.map((url, i) => (
             <button key={i} onClick={() => setPhotoIndex(i)}>
               <img src={url} alt="" className={`w-16 h-16 object-cover rounded-xl flex-shrink-0 transition-opacity
-                ${i === photoIndex ? 'opacity-100 ring-2 ring-primary' : 'opacity-50'}`} />
+                ${i === photoIndex ? 'opacity-100 ring-2 ring-accent' : 'opacity-50'}`} />
             </button>
           ))}
         </div>
@@ -107,7 +106,7 @@ export default function PropertyDetail() {
         <div className="flex items-start justify-between mb-1">
           <StatusBadge status={property.status} />
           {property.price && (
-            <span className="font-display font-bold text-primary text-lg">
+            <span className="font-display font-bold text-accent text-lg">
               ₹{formatPrice(property.price)}
             </span>
           )}
@@ -135,7 +134,7 @@ export default function PropertyDetail() {
       </div>
 
       {/* Owner Details */}
-      <div className="mx-5 bg-surface rounded-2xl p-4 mb-4">
+      <div className="mx-5 bg-surface rounded-2xl p-4 mb-4 border border-accent/5">
         <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">Owner Details</p>
         <Row label="Owner" value={property.ownerName || '—'} />
         {property.contact && (
@@ -147,7 +146,7 @@ export default function PropertyDetail() {
 
       {/* Notes */}
       {property.notes && (
-        <div className="mx-5 bg-surface rounded-2xl p-4 mb-4">
+        <div className="mx-5 bg-surface rounded-2xl p-4 mb-4 border border-accent/5">
           <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2">Notes</p>
           <p className="text-text-primary text-sm leading-relaxed">{property.notes}</p>
         </div>
@@ -158,7 +157,7 @@ export default function PropertyDetail() {
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="w-full py-3 rounded-2xl text-red-500 bg-red-50 text-sm font-semibold active:bg-red-100 transition-colors disabled:opacity-50"
+          className="w-full py-3 rounded-2xl text-red-400 bg-red-500/10 text-sm font-semibold active:bg-red-500/20 transition-colors disabled:opacity-50"
         >
           {deleting ? 'Deleting...' : 'Delete Property'}
         </button>
@@ -169,7 +168,7 @@ export default function PropertyDetail() {
 
 function InfoTile({ label, value }) {
   return (
-    <div className="bg-surface rounded-xl p-3">
+    <div className="bg-surface rounded-xl p-3 border border-accent/5">
       <p className="text-xs text-text-muted uppercase tracking-wider font-medium mb-1">{label}</p>
       <p className="text-text-primary font-display font-semibold text-base">{value}</p>
     </div>
@@ -178,9 +177,9 @@ function InfoTile({ label, value }) {
 
 function Row({ label, value, highlight }) {
   return (
-    <div className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+    <div className="flex items-center justify-between py-2 border-b border-accent/5 last:border-0">
       <span className="text-text-muted text-sm">{label}</span>
-      <span className={`text-sm font-medium ${highlight ? 'text-primary underline underline-offset-2' : 'text-text-primary'}`}>{value}</span>
+      <span className={`text-sm font-medium ${highlight ? 'text-accent underline underline-offset-2' : 'text-text-primary'}`}>{value}</span>
     </div>
   )
 }

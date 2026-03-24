@@ -110,12 +110,17 @@ export default function Home() {
   return (
     <div className="pb-28">
       {/* Header */}
-      <div className="bg-primary px-5 pt-12 pb-5">
-        <h1 className="font-display font-bold text-white text-2xl mb-4">Properties</h1>
+      <div className="bg-primary px-5 pt-12 pb-5 border-b border-accent/10">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-9 h-9 rounded-lg overflow-hidden shadow-md">
+            <img src="/logo.jpeg" alt="GA Builders" className="w-full h-full object-cover" />
+          </div>
+          <h1 className="font-display font-bold text-accent text-2xl">Properties</h1>
+        </div>
 
         {/* Search */}
-        <div className="flex items-center bg-white/10 rounded-xl px-4 py-3 gap-2">
-          <svg className="w-5 h-5 text-white/60 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="flex items-center bg-surface rounded-xl px-4 py-3 gap-2 border border-accent/10">
+          <svg className="w-5 h-5 text-text-muted flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-4.35-4.35M17 11A6 6 0 1 1 5 11a6 6 0 0 1 12 0z" />
           </svg>
           <input
@@ -124,11 +129,11 @@ export default function Home() {
             value={search}
             onChange={e => setSearch(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleAISearch()}
-            className="bg-transparent text-white placeholder-white/50 text-sm flex-1 outline-none min-w-0"
+            className="bg-transparent text-text-primary placeholder-text-muted text-sm flex-1 outline-none min-w-0"
           />
           {search && (
             <button onClick={() => { setSearch(''); setAiFilters(null) }}>
-              <svg className="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -143,19 +148,19 @@ export default function Home() {
         </div>
 
         {aiFilters && (
-          <div className="mt-4 bg-accent/20 border border-accent/40 rounded-xl px-4 py-3 flex justify-between items-start backdrop-blur-sm">
+          <div className="mt-4 bg-accent/10 border border-accent/20 rounded-xl px-4 py-3 flex justify-between items-start backdrop-blur-sm">
              <div>
-               <p className="text-white text-xs font-semibold uppercase mb-1 flex items-center gap-1.5">
+               <p className="text-accent text-xs font-semibold uppercase mb-1 flex items-center gap-1.5">
                  <svg className="w-3.5 h-3.5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                  </svg>
                  AI Filter Applied
                </p>
-               <p className="text-white/80 text-sm font-medium">
+               <p className="text-text-secondary text-sm font-medium">
                  {Object.entries(aiFilters).map(([k,v]) => `${k}: ${v}`).join(', ') || 'General Match'}
                </p>
              </div>
-             <button onClick={() => { setAiFilters(null); setSearch('') }} className="text-white/60 hover:text-white mt-0.5">
+             <button onClick={() => { setAiFilters(null); setSearch('') }} className="text-text-muted hover:text-accent mt-0.5">
                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                </svg>
@@ -173,7 +178,7 @@ export default function Home() {
               onClick={() => setFilter(f.value)}
               className={`flex-shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors
                 ${filter === f.value
-                  ? 'bg-primary text-white'
+                  ? 'bg-accent text-primary'
                   : 'bg-surface-raised text-text-secondary'}`}
             >
               {f.label}

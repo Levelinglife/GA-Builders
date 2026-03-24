@@ -28,25 +28,23 @@ export default function Login() {
 
       {/* Top */}
       <div className="flex flex-col gap-1 mt-8 text-center items-center">
-        <div className="w-16 h-16 bg-white/10 rounded-2xl flex items-center justify-center mb-6">
-          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9.75L12 3l9 6.75V21a.75.75 0 01-.75.75H3.75A.75.75 0 013 21V9.75z" />
-          </svg>
+        <div className="w-20 h-20 rounded-2xl overflow-hidden mb-6 shadow-lg shadow-accent/20">
+          <img src="/logo.jpeg" alt="GA Builders" className="w-full h-full object-cover" />
         </div>
-        <h1 className="font-display font-bold text-white text-4xl">GA Builders</h1>
-        <p className="text-white/60 text-base mt-2">Your property intelligence</p>
+        <h1 className="font-display font-bold text-accent text-4xl">GA Builders</h1>
+        <p className="text-text-muted text-base mt-2">Your property intelligence</p>
       </div>
 
       {/* Form Area */}
       <div className="flex flex-col gap-4 items-center">
         {error && (
-          <p className="text-red-300 text-sm bg-red-500/10 rounded-xl px-4 py-3 text-center">{error}</p>
+          <p className="text-red-400 text-sm bg-red-500/10 rounded-xl px-4 py-3 text-center">{error}</p>
         )}
 
         <button
           onClick={handleLogin}
           disabled={loading}
-          className="w-full max-w-[320px] bg-white text-primary font-display font-bold text-base py-4 px-6 rounded-full flex items-center justify-center gap-3 mt-2 hover:bg-white/90 active:scale-[0.98] transition-all disabled:opacity-70 shadow-xl"
+          className="w-full max-w-[320px] bg-accent text-primary font-display font-bold text-base py-4 px-6 rounded-full flex items-center justify-center gap-3 mt-2 hover:bg-accent-light active:scale-[0.98] transition-all disabled:opacity-70 shadow-xl shadow-accent/20"
         >
           <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -60,7 +58,7 @@ export default function Login() {
         </button>
       </div>
 
-      <p className="text-white/20 text-xs text-center flex-shrink-0">
+      <p className="text-text-muted/40 text-xs text-center flex-shrink-0">
         Securely powered by Google Sign-In
       </p>
 
