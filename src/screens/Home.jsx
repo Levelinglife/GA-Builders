@@ -5,12 +5,12 @@ import PropertyCard from '../components/PropertyCard'
 
 const FILTERS = [
   { label: 'All', value: 'all' },
-  { label: 'For Sale', value: 'for_sale' },
-  { label: 'To Let', value: 'need_tenant' },
-  { label: 'Need Rent', value: 'need_rent_house' },
-  { label: 'Rented', value: 'rented' },
+  { label: 'Buying', value: 'buying' },
+  { label: 'Selling', value: 'selling' },
+  { label: 'Rent', value: 'rent' },
   { label: 'Occupied', value: 'occupied' },
   { label: 'Construction', value: 'construction' },
+  { label: 'Constructed', value: 'constructed' },
 ]
 
 export default function Home() {

@@ -1,11 +1,10 @@
 const STATUS_STYLES = {
-  for_sale: { label: 'For Sale', bg: 'bg-status-sale-bg', text: 'text-status-sale' },
-  need_tenant: { label: 'To Let', bg: 'bg-purple-500/20', text: 'text-purple-400' },
-  need_rent_house: { label: 'Need Rent', bg: 'bg-cyan-500/20', text: 'text-cyan-400' },
-  rented: { label: 'Rented', bg: 'bg-status-rent-bg', text: 'text-status-rent' },
-  occupied: { label: 'Occupied', bg: 'bg-status-occupied-bg', text: 'text-status-occupied' },
-  construction: { label: 'Under Construction', bg: 'bg-status-construction-bg', text: 'text-status-construction' },
-  closed: { label: 'Closed', bg: 'bg-surface-raised', text: 'text-text-muted' },
+  buying: { label: 'Buying', bg: 'bg-blue-500/20', text: 'text-blue-400' },
+  selling: { label: 'Selling', bg: 'bg-green-500/20', text: 'text-green-400' },
+  rent: { label: 'Rent', bg: 'bg-purple-500/20', text: 'text-purple-400' },
+  occupied: { label: 'Occupied', bg: 'bg-yellow-500/20', text: 'text-yellow-400' },
+  construction: { label: 'Construction', bg: 'bg-orange-500/20', text: 'text-orange-400' },
+  constructed: { label: 'Constructed', bg: 'bg-teal-500/20', text: 'text-teal-400' },
 }
 
 export default function StatusBadge({ status }) {

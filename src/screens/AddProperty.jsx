@@ -4,13 +4,12 @@ import { collection, doc, onSnapshot, setDoc, updateDoc, serverTimestamp } from 
 import { db } from '../firebase'
 
 const STATUS_OPTIONS = [
-  { value: 'for_sale', label: '🏷️ For Sale', color: 'bg-green-500/10 text-green-400 border-green-500/20' },
-  { value: 'need_tenant', label: '📢 To Let', color: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
-  { value: 'need_rent_house', label: '🔍 Need Rent', color: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20' },
-  { value: 'rented', label: '🔑 Rented', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
-  { value: 'occupied', label: '🏠 Occupied', color: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' },
+  { value: 'buying', label: '🛒 Buying', color: 'bg-blue-500/10 text-blue-400 border-blue-500/20' },
+  { value: 'selling', label: '🏷️ Selling', color: 'bg-green-500/10 text-green-400 border-green-500/20' },
+  { value: 'rent', label: '🏠 Rent', color: 'bg-purple-500/10 text-purple-400 border-purple-500/20' },
+  { value: 'occupied', label: '🔒 Occupied', color: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' },
   { value: 'construction', label: '🏗️ Construction', color: 'bg-orange-500/10 text-orange-400 border-orange-500/20' },
-  { value: 'closed', label: '🚫 Closed', color: 'bg-red-500/10 text-red-400 border-red-500/20' },
+  { value: 'constructed', label: '✅ Constructed', color: 'bg-teal-500/10 text-teal-400 border-teal-500/20' },
 ]
 
 const TYPE_OPTIONS = ['Residential', 'Commercial', 'Mixed Use', 'Plot / Land']
@@ -28,7 +27,7 @@ const FLOOR_OPTIONS = [
 
 const EMPTY_FORM = {
   houseNo: '', ownerName: '', block: '', plotSize: '', floors: '',
-  type: 'Residential', status: 'occupied', price: '', contact: '', notes: '',
+  type: 'Residential', status: 'selling', price: '', contact: '', notes: '',
 }
 
 // Max file size: 10MB
@@ -67,7 +66,7 @@ export default function AddProperty() {
             houseNo: data.houseNo || '', ownerName: data.ownerName || '',
             block: data.block || '', plotSize: data.plotSize || '',
             floors: data.floors || '', type: data.type || 'Residential',
-            status: data.status || 'occupied', price: data.price || '',
+            status: data.status || 'selling', price: data.price || '',
             contact: data.contact || '', notes: data.notes || '',
           })
           setExistingPhotos(data.photos || [])
